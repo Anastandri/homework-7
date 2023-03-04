@@ -1,51 +1,68 @@
-from pprint import pprint
-def dict_collector(file_path):
-    with open(file_path, 'r',encoding ='utf 8' ) as file_work:
-        menu = {}
-        for line in file_work:
-            dish_name = line[:-1]
-            counter = file_work.readline().strip()
-            list_of_ingridient = []
-            for i in range(int(counter)):
-                dish_items = dict.fromkeys(['ingredient_name', 'quantity', 'measure'])
-                ingridient = file_work.readline().strip().split(' | ')
-                for item in ingridient:
-                    dish_items['ingredient_name'] = ingridient[0]
-                    dish_items['quantity'] = ingridient[1]
-                    dish_items['measure'] = ingridient[2]
-                list_of_ingridient.append(dish_items)
-                cook_book = {dish_name: list_of_ingridient}
-                menu.update(cook_book)
-            file_work.readline()
-
-    return(menu)
-
-def get_shop_list_by_dishes(dishes, persons):
-    menu = dict_collector('cook-book.txt')
-    print('Меню кафе:')
-    pprint(menu)
-    print()
+cook_book = {
+  'Омлет': [
+    {'ingredient_name': 'Яйцо', 'quantity': 2, 'measure': 'шт.'},
+    {'ingredient_name': 'Молоко', 'quantity': 100, 'measure': 'мл'},
+    {'ingredient_name': 'Помидор', 'quantity': 2, 'measure': 'шт'}
+    ],
+  'Утка по-пекински': [
+    {'ingredient_name': 'Утка', 'quantity': 1, 'measure': 'шт'},
+    {'ingredient_name': 'Вода', 'quantity': 2, 'measure': 'л'},
+    {'ingredient_name': 'Мед', 'quantity': 3, 'measure': 'ст.л'},
+    {'ingredient_name': 'Соевый соус', 'quantity': 60, 'measure': 'мл'}
+    ],
+  'Запеченный картофель': [
+    {'ingredient_name': 'Картофель', 'quantity': 1, 'measure': 'кг'},
+    {'ingredient_name': 'Чеснок', 'quantity': 3, 'measure': 'зубч'},
+    {'ingredient_name': 'Сыр гауда', 'quantity': 100, 'measure': 'г'},
+    ]
+  }
+ 
+ 
+def get_shop_list_by_dishes(dishes, person_count):
     shop_list = {}
-    person_count = input('Введите количество человек: ')
-    dishes = input('Введите блюда в расчете на одного человека (через запятую): ')
-    try:
-        for dish in dishes:
-            for item in (menu[dish]):
-                items_list = dict([(item['ingredient_name'], {'measure': item['measure'], 'quantity': int(item['quantity'])*persons})])
-
-                if shop_list.get(item['ingredient_name']):
-                    extra_item = (int(shop_list[item['ingredient_name']]['quantity']) + int(items_list[item['ingredient_name']]['quantity']))
-                    shop_list[item['ingredient_name']]['quantity'] = extra_item
-
-                else:
-                    shop_list.update(items_list)
-
-
-        print(f"Для приготовления блюда на {persons} персоны, нужно купить:")
-        pprint(shop_list)
-        
-    except KeyError : 
-        print("такого блюда нет в нашем меню")
-
-dict_collector('cook-book.txt')
-get_shop_list_by_dishes(['...', '...'], [0])
+    for dish in dishes:
+        for ingridient in cook_book[dish]:
+            new_shop_list_item = dict(ingridient)
+            new_shop_list_item['quantity'] *= person_count
+            if new_shop_list_item['ingridient_name'] not in shop_list:
+                  shop_list[new_shop_list_item['ingridient_name']] = new_shop_list_item
+        else:
+          shop_list[new_shop_list_item['ingridient_name']]['quantity'] += new_shop_list_item['quantity']
+    return shop_list
+ 
+ 
+def print_shop_list(shop_list):
+    for shop_list_item in shop_list.values():
+        print('{} {} {}'.format(shop_list_item['ingredient_name'], shop_list_item['quantity'],
+                                shop_list_item['measure']))
+ 
+ 
+def get_cook_book_with_quantity(path):
+    cook_book = {}
+    with open(path, encoding='utf-8') as f:
+        while True:
+            name = f.readline().strip()
+            if not name:
+                break
+            count = int(f.readline().strip())
+            cook_book[name] = []
+            line = f.readline().strip()
+            while line:
+                ingredients = line.split(" | ")
+                ingredients_dict = {"ingredient_name": ingredients[0],
+                                    "quantity": int(ingredients[1]),
+                                    "measure": ingredients[2]}
+                cook_book[name].append(ingredients_dict)
+                line = f.readline().strip()
+ 
+        return cook_book
+ 
+ 
+def shop_list():
+    person_count = int(input('Введите количество человек: '))
+    dishes = int(input('Введите блюда через запятую на одного человека : ')) \
+    .lower().split(', ')
+    cook_book = get_cook_book_with_quantity("cook-book.txt")
+    shop_list = get_shop_list_by_dishes(dishes, person_count)
+   
+print(shop_list)
